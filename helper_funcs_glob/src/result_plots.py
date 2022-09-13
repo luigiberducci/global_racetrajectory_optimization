@@ -69,7 +69,7 @@ def result_plots(plot_opts: dict,
         ax.set_aspect("equal", "datalim")
         plt.xlabel("east in m")
         plt.ylabel("north in m")
-        plt.show()
+        plt.savefig(f"raceline.pdf")
 
     if plot_opts["raceline_curv"]:
         # plot curvature profile
@@ -78,9 +78,9 @@ def result_plots(plot_opts: dict,
         plt.grid()
         plt.xlabel("distance in m")
         plt.ylabel("curvature in rad/m")
-        plt.show()
+        plt.savefig("curvature.pdf")
 
-    if plot_opts["racetraj_vel_3d"]:
+    if plot_opts["racetraj_vel_3d"] or True:
         scale_x = 1.0
         scale_y = 1.0
         scale_z = 0.3  # scale z axis such that it does not appear stretched
@@ -134,9 +134,9 @@ def result_plots(plot_opts: dict,
             # increment index
             cur_ind += ind_stepsize
 
-        plt.show()
+        plt.savefig("unknown_3d_plot.pdf")
 
-    if plot_opts["spline_normals"]:
+    if plot_opts["spline_normals"] or True:
         plt.figure()
 
         plt.plot(refline[:, 0], refline[:, 1], 'k-')
@@ -150,7 +150,7 @@ def result_plots(plot_opts: dict,
         plt.xlabel("east in m")
         plt.ylabel("north in m")
 
-        plt.show()
+        plt.savefig("spline_normals.pdf")
 
 
 # testing --------------------------------------------------------------------------------------------------------------

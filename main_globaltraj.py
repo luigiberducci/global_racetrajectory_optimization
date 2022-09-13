@@ -433,7 +433,7 @@ if plot_opts["racetraj_vel"]:
     plt.xlabel("distance in m")
     plt.legend(["vx in m/s", "ax in m/s2", "t in s"])
 
-    plt.show()
+    plt.savefig("velocity_profile.pdf")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CALCULATE LAP TIMES (AT DIFFERENT SCALES AND TOP SPEEDS) -------------------------------------------------------------
