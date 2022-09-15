@@ -52,15 +52,16 @@ def export_traj_ltpl(file_paths: dict,
         ax_normvec.append(trajectory_opt[idx, 6])
 
     traj_ltpl = np.column_stack((reftrack,
-                                 normvec_normalized,
-                                 alpha_opt,
-                                 s_raceline_preinterp_cl[:-1],
-                                 psi_normvec,
-                                 kappa_normvec,
-                                 vx_normvec,
-                                 ax_normvec))
+                                 #normvec_normalized,
+                                 #alpha_opt,
+                                 #s_raceline_preinterp_cl[:-1],
+                                 #psi_normvec,
+                                 #kappa_normvec,
+                                 #vx_normvec,
+                                 #ax_normvec
+                                 ))
     traj_ltpl_cl = np.vstack((traj_ltpl, traj_ltpl[0]))
-    traj_ltpl_cl[-1, 7] = s_raceline_preinterp_cl[-1]
+    traj_ltpl_cl[-1, 3] = s_raceline_preinterp_cl[-1]
 
     # create random UUID
     rand_uuid = str(uuid.uuid4())
@@ -81,7 +82,7 @@ def export_traj_ltpl(file_paths: dict,
     # export trajectory data for local planner
     header = "x_ref_m; y_ref_m; width_right_m; width_left_m; x_normvec_m; y_normvec_m; " \
              "alpha_m; s_racetraj_m; psi_racetraj_rad; kappa_racetraj_radpm; vx_racetraj_mps; ax_racetraj_mps2"
-    fmt = "%.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f"
+    fmt = "%.7f, %.7f, %.7f, %.7f"#, %.7f, %.7f, %.7f, %.7f, %.7f, %.7f, %.7f, %.7f"
     with open(file_paths["traj_ltpl_export"], 'ab') as fh:
         np.savetxt(fh, traj_ltpl, fmt=fmt, header=header)
 

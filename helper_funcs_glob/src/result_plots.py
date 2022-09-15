@@ -49,38 +49,42 @@ def result_plots(plot_opts: dict,
 
         # plot track including optimized path
         plt.figure()
-        plt.plot(refline[:, 0], refline[:, 1], "k--", linewidth=0.7)
-        plt.plot(veh_bound1_virt[:, 0], veh_bound1_virt[:, 1], "b", linewidth=0.5)
+        plt.plot(refline[:, 0], refline[:, 1], "k--", linewidth=0.7, label='refline')
+        plt.plot(veh_bound1_virt[:, 0], veh_bound1_virt[:, 1], "b", linewidth=0.5, label="vehicle bound virtual")
         plt.plot(veh_bound2_virt[:, 0], veh_bound2_virt[:, 1], "b", linewidth=0.5)
-        plt.plot(veh_bound1_real[:, 0], veh_bound1_real[:, 1], "c", linewidth=0.5)
+        plt.plot(veh_bound1_real[:, 0], veh_bound1_real[:, 1], "c", linewidth=0.5, label="vehicle bound real")
         plt.plot(veh_bound2_real[:, 0], veh_bound2_real[:, 1], "c", linewidth=0.5)
-        plt.plot(bound1_interp[:, 0], bound1_interp[:, 1], "k-", linewidth=0.7)
+        plt.plot(bound1_interp[:, 0], bound1_interp[:, 1], "k-", linewidth=0.7, label="interpolated track bounds")
         plt.plot(bound2_interp[:, 0], bound2_interp[:, 1], "k-", linewidth=0.7)
-        plt.plot(trajectory[:, 1], trajectory[:, 2], "r-", linewidth=0.7)
+        plt.plot(trajectory[:, 1], trajectory[:, 2], "r-", linewidth=0.7, label="trajectory")
 
         if plot_opts["imported_bounds"] and bound1_imp is not None and bound2_imp is not None:
-            plt.plot(bound1_imp[:, 0], bound1_imp[:, 1], "y-", linewidth=0.7)
+            plt.plot(bound1_imp[:, 0], bound1_imp[:, 1], "y-", linewidth=0.7, label="imported track bounds")
             plt.plot(bound2_imp[:, 0], bound2_imp[:, 1], "y-", linewidth=0.7)
 
         plt.grid()
+        plt.legend()
+        plt.title('raceline')
         ax = plt.gca()
         ax.arrow(point1_arrow[0], point1_arrow[1], vec_arrow[0], vec_arrow[1],
-                 head_width=7.0, head_length=7.0, fc='g', ec='g')
+                 head_width=0.7, head_length=0.7, fc='g', ec='g')
         ax.set_aspect("equal", "datalim")
         plt.xlabel("east in m")
         plt.ylabel("north in m")
-        plt.savefig(f"raceline.pdf")
+        plt.savefig("raceline.pdf")
 
     if plot_opts["raceline_curv"]:
         # plot curvature profile
         plt.figure()
-        plt.plot(trajectory[:, 0], trajectory[:, 4])
+        plt.title("raceline curvature")
+        plt.plot(trajectory[:, 0], trajectory[:, 4], label="trajectory")
         plt.grid()
         plt.xlabel("distance in m")
         plt.ylabel("curvature in rad/m")
+        plt.legend()
         plt.savefig("curvature.pdf")
 
-    if plot_opts["racetraj_vel_3d"] or True:
+    if plot_opts["racetraj_vel_3d"]:
         scale_x = 1.0
         scale_y = 1.0
         scale_z = 0.3  # scale z axis such that it does not appear stretched
@@ -93,10 +97,10 @@ def result_plots(plot_opts: dict,
         ax.get_proj = lambda: np.dot(Axes3D.get_proj(ax), np.diag([scale_x, scale_y, scale_z, 1.0]))
 
         # plot raceline and boundaries
-        ax.plot(refline[:, 0], refline[:, 1], "k--", linewidth=0.7)
-        ax.plot(bound1_interp[:, 0], bound1_interp[:, 1], 0.0, "k-", linewidth=0.7)
+        ax.plot(refline[:, 0], refline[:, 1], "k--", linewidth=0.7, label="reference line")
+        ax.plot(bound1_interp[:, 0], bound1_interp[:, 1], 0.0, "k-", linewidth=0.7, label="interpolated bounds")
         ax.plot(bound2_interp[:, 0], bound2_interp[:, 1], 0.0, "k-", linewidth=0.7)
-        ax.plot(trajectory[:, 1], trajectory[:, 2], "r-", linewidth=0.7)
+        ax.plot(trajectory[:, 1], trajectory[:, 2], "r-", linewidth=0.7, label="trajectory")
 
         ax.grid()
         ax.set_aspect("auto")
@@ -134,12 +138,14 @@ def result_plots(plot_opts: dict,
             # increment index
             cur_ind += ind_stepsize
 
-        plt.savefig("unknown_3d_plot.pdf")
+        plt.legend()
+        plt.savefig("velocity_3d.pdf")
 
-    if plot_opts["spline_normals"] or True:
+    if plot_opts["spline_normals"]:
         plt.figure()
+        plt.title("spline normals on reference line")
 
-        plt.plot(refline[:, 0], refline[:, 1], 'k-')
+        plt.plot(refline[:, 0], refline[:, 1], 'k-', label="reference line")
         for i in range(bound1_interp.shape[0]):
             temp = np.vstack((bound1_interp[i], bound2_interp[i]))
             plt.plot(temp[:, 0], temp[:, 1], "r-", linewidth=0.7)
@@ -149,8 +155,9 @@ def result_plots(plot_opts: dict,
         ax.set_aspect("equal", "datalim")
         plt.xlabel("east in m")
         plt.ylabel("north in m")
+        plt.legend()
 
-        plt.savefig("spline_normals.pdf")
+        plt.savefig("norm_to_spline.pdf")
 
 
 # testing --------------------------------------------------------------------------------------------------------------

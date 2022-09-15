@@ -29,6 +29,7 @@ def export_traj_race(file_paths: dict,
         ggv_content = np.array([])
     ggv_hash = hashlib.sha1(ggv_content).hexdigest()
 
+    '''
     # write UUID and GGV hash into file
     with open(file_paths["traj_race_export"], 'w') as fh:
         fh.write("# " + rand_uuid + "\n")
@@ -39,6 +40,19 @@ def export_traj_race(file_paths: dict,
     fmt = "%.7f; %.7f; %.7f; %.7f; %.7f; %.7f; %.7f"
     with open(file_paths["traj_race_export"], 'ab') as fh:
         np.savetxt(fh, traj_race, fmt=fmt, header=header)
+
+    for i in range(traj_race.shape[0]):
+        traj_race[i,4] = traj_race[i,4]*0.3302 # TODO: magic number is the wheel base of the car, use param from ini file
+    '''
+
+    race_path = np.array([traj_race[:,1],traj_race[:,2],traj_race[:,5],traj_race[:,3],traj_race[:,4]])
+    race_path = race_path.transpose()
+
+    # export race trajectory
+    header = "x_m, y_m, vx_mps, psi_rad, kappa_radpm"
+    fmt = "%.7f, %.7f, %.7f, %.7f, %.7f"
+    with open(file_paths["traj_race_export"], 'w') as fh:
+        np.savetxt(fh, race_path, fmt=fmt, header=header)
 
 
 # testing --------------------------------------------------------------------------------------------------------------

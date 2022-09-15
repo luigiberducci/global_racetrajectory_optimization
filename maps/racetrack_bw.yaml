@@ -1,0 +1,13 @@
+---
+image: racetrack_bw.png
+resolution: 0.025
+origin:
+  - -6.459792265050552
+  - -14.433128961761838
+  - 0.0
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+origin_orientation:
+  x: 0.9987148084919923
+  y: -0.050682652839046

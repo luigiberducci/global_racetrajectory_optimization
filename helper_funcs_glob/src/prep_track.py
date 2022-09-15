@@ -2,13 +2,14 @@ import numpy as np
 import trajectory_planning_helpers as tph
 import sys
 import matplotlib.pyplot as plt
+import helper_funcs_glob
 
 
 def prep_track(reftrack_imp: np.ndarray,
                reg_smooth_opts: dict,
                stepsize_opts: dict,
                debug: bool = True,
-               min_width: float = None) -> tuple:
+               min_width: float = None, intersects_off: bool = False, new_track_interpolation: bool = False) -> tuple:
     """
     Created by:
     Alexander Heilmeier
@@ -36,14 +37,14 @@ def prep_track(reftrack_imp: np.ndarray,
     # ------------------------------------------------------------------------------------------------------------------
 
     # smoothing and interpolating reference track
-    reftrack_interp = tph.spline_approximation. \
-        spline_approximation(track=reftrack_imp,
-                             k_reg=reg_smooth_opts["k_reg"],
-                             s_reg=reg_smooth_opts["s_reg"],
-                             stepsize_prep=stepsize_opts["stepsize_prep"],
-                             stepsize_reg=stepsize_opts["stepsize_reg"],
-                             debug=debug)
-
+    reftrack_interp = helper_funcs_glob.src.spline_approximation.spline_approximation(
+                                track=reftrack_imp,
+                                k_reg=reg_smooth_opts["k_reg"],
+                                s_reg=reg_smooth_opts["s_reg"],
+                                stepsize_prep=stepsize_opts["stepsize_prep"],
+                                stepsize_reg=stepsize_opts["stepsize_reg"],
+                                debug=debug,
+                                new_track_interpolation= new_track_interpolation)
     # calculate splines
     refpath_interp_cl = np.vstack((reftrack_interp[:, :2], reftrack_interp[0, :2]))
 
@@ -53,10 +54,14 @@ def prep_track(reftrack_imp: np.ndarray,
     # ------------------------------------------------------------------------------------------------------------------
     # CHECK SPLINE NORMALS FOR CROSSING POINTS -------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
-
-    normals_crossing = tph.check_normals_crossing.check_normals_crossing(track=reftrack_interp,
-                                                                         normvec_normalized=normvec_normalized_interp,
-                                                                         horizon=10)
+    if (intersects_off == True):
+        #HACK
+        normals_crossing = False
+        #HACK END
+    else:
+        normals_crossing = tph.check_normals_crossing.check_normals_crossing(track=reftrack_interp,
+                                                                            normvec_normalized=normvec_normalized_interp,
+                                                                            horizon=10)
 
     if normals_crossing:
         bound_1_tmp = reftrack_interp[:, :2] + normvec_normalized_interp * np.expand_dims(reftrack_interp[:, 2], axis=1)

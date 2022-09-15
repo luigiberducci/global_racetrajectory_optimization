@@ -1,3 +1,11 @@
+# Repo copied from TUM. Instructions:
+
+* Save a map with a pgm and yaml file in the maps submodule. The standard name "map" is ignored by git.
+* Create csv file by executing `python3 calc_waypoints --map_file mapname` from the bitmap2csv directory. Check
+additional options with `python3 calc_waypoints --help`. Default map_file is "map".
+* In standard configuration, the output csv file is saved in the maps submodule.
+* Finally, run `python3 main_globaltraj.py`. The optimal path is again saved in the maps submodule.
+
 # Introduction
 This repository contains algorithms that allow us to determine an optimal racing line on a race track. You can chose
 between several objectives:
@@ -13,12 +21,12 @@ more computation time. Please look into the `main_globaltraj.py` for all possibl
 # List of components
 * `frictionmap`: This package contains the functions related to the creation and handling of friction maps along the
 race track.
-* `helper_funcs_glob`: This package contains some helper functions used in several other functions when 
+* `helper_funcs_glob`: This package contains some helper functions used in several other functions when
 calculating the global race trajectory.
 * `inputs`: This folder contains the vehicle dynamics information, the reference track csvs and friction maps.
-* `opt_mintime_traj`: This package contains the functions required to find the time-optimal trajectory. 
-  
-  It also includes the powertrain components in `opt_mintime_traj/powertrain_src` used to calculate power losses and 
+* `opt_mintime_traj`: This package contains the functions required to find the time-optimal trajectory.
+
+  It also includes the powertrain components in `opt_mintime_traj/powertrain_src` used to calculate power losses and
   thermal behavior of the powertrain and to consider the state of charge of the battery.
 * `params`: This folder contains a parameter file with optimization and vehicle parameters.
 
@@ -58,10 +66,10 @@ acceleration should be calculated without drag resistance, i.e. simply by F_x_dr
 * `Step 5:` (optional) If you want to consider the powertrain behavior (thermal behavior, power loss, state of charge),
 enable the powertrain-option in the parameter file (`/params`) and adjust the powertrain parameters as needed. Set the
 number of race laps in the dict `imp_opts` in `main_globaltraj.py` and specify a non-regular discretization step length
-for faster optimization in the parameter file (`/params`) (if used). You can select a simple approximation of the 
-  powertrain components by setting `/params/racecar.ini:simple_loss = True` or consider more detailed models by 
+for faster optimization in the parameter file (`/params`) (if used). You can select a simple approximation of the
+  powertrain components by setting `/params/racecar.ini:simple_loss = True` or consider more detailed models by
   specifying `/params/racecar.ini:simple_loss = False`.
-* `Step 6:` Adjust the parameters in the upper part of `main_globaltraj.py` and execute it to start the trajectory 
+* `Step 6:` Adjust the parameters in the upper part of `main_globaltraj.py` and execute it to start the trajectory
 generation process. The calculated race trajectory is stored in `outputs/traj_race_cl.csv`.
 
 IMPORTANT: For further information on the minimum time optimization have a look into the according `Readme.md` which can
@@ -124,7 +132,7 @@ structured as follows:
 * `vx_racetraj_mps`: float32, meter/second. Target velocity in current point.
 * `ax_racetraj_mps2`: float32, meter/second². Target acceleration in current point. We assume this acceleration to be
   constant from current point until next point.
-  
+
 The generated file can be directly imported by the
 [graph-based local trajectory planner](https://github.com/TUMFTM/GraphBasedLocalTrajectoryPlanner).
 

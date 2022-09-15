@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import configparser
 import pkg_resources
 import helper_funcs_glob
+import sys
+import argparse
 
 """
 Created by:
@@ -19,6 +21,25 @@ This script has to be executed to generate an optimal trajectory based on a give
 """
 
 # ----------------------------------------------------------------------------------------------------------------------
+# ARGUMENT PARSING -----------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
+parser = argparse.ArgumentParser(description='Calculate an optimal trajectory on a given reference track')
+parser.add_argument('track_name', help='the track name you dummy (without ".csv")')
+parser.add_argument('ax_pos', type=float, help='maximum safe acceleration of the car')
+parser.add_argument('ax_neg', type=float, help='maximum safe deceleration of the car (braking)')
+parser.add_argument('ay', type=float, help='maximum safe lateral acceleration of the car')
+parser.add_argument('opt_type', choices=['mintime', 'mincurv', 'shortest_path', 'mincurv_iqp'], help='choose the optimization type')
+parser.add_argument('-iso','--intersects_off', action='store_true', help='if specified the hack to ignore intersections is enabled and therefore intersections are ignored')
+parser.add_argument('-nti','--new_track_interpolation', action='store_true', help='if specified the new track interpolation is used')
+parser.add_argument('-wo', '--width_opt', type=float, default=-0.5, help='Overwrites the width_opt argument from the racecar.ini file for the correct optimization. If unused the value from the file is read.')
+parser.add_argument('-pd', '--penalty_delta', type=float, default=-0.5, help='range [0.0, 50.0], Overwrites the penalty_delta argument from the racecar.ini file for mintime optimization. If unused the value from the file is read.')
+parser.add_argument('-ssp', '--stepsize_prep', type=float, default=-0.5, help='Overwrites the stepsize_prep argument from the racecar.ini file. If unused the value from the file is read.')
+parser.add_argument('-ssr', '--stepsize_reg', type=float, default=-0.5, help='Overwrites the stepsize_reg argument from the racecar.ini file. If unused the value from the file is read.')
+parser.add_argument('-sso', '--stepsize_interp_after_opt', type=float, default=-0.5, help='Overwrites the stepsize_interp_after_opt argument from the racecar.ini file. If unused the value from the file is read.')
+args = parser.parse_args()
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # USER INPUT -----------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -26,22 +47,20 @@ This script has to be executed to generate an optimal trajectory based on a give
 file_paths = {"veh_params_file": "racecar.ini"}
 
 # debug and plot options -----------------------------------------------------------------------------------------------
-debug = True                                    # print console messages
+debug = False                                    # print console messages
 plot_opts = {"mincurv_curv_lin": False,         # plot curv. linearization (original and solution based) (mincurv only)
              "raceline": True,                  # plot optimized path
-             "imported_bounds": False,          # plot imported bounds (analyze difference to interpolated bounds)
-             "raceline_curv": True,             # plot curvature profile of optimized path
+             "imported_bounds": True,          # plot imported bounds (analyze difference to interpolated bounds)
+             "raceline_curv": False,             # plot curvature profile of optimized path
              "racetraj_vel": True,              # plot velocity profile
              "racetraj_vel_3d": False,          # plot 3D velocity profile above raceline
              "racetraj_vel_3d_stepsize": 1.0,   # [m] vertical lines stepsize in 3D velocity profile plot
-             "spline_normals": False,           # plot spline normals to check for crossings
+             "spline_normals": True,           # plot spline normals to check for crossings
              "mintime_plots": False}            # plot states, controls, friction coeffs etc. (mintime only)
 
 # select track file (including centerline coordinates + track widths) --------------------------------------------------
-# file_paths["track_name"] = "rounded_rectangle"                              # artificial track
-# file_paths["track_name"] = "handling_track"                                 # artificial track
-file_paths["track_name"] = "berlin_2018"                                    # Berlin Formula E 2018
-#file_paths["track_name"] = "modena_2019"                                    # Modena 2019
+# file_paths["track_name"] = "berlin_2018"                                    # Berlin Formula E 2018
+file_paths["track_name"] = args.track_name
 
 # set import options ---------------------------------------------------------------------------------------------------
 imp_opts = {"flip_imp_track": False,                # flip imported track to reverse direction
@@ -56,7 +75,7 @@ imp_opts = {"flip_imp_track": False,                # flip imported track to rev
 # 'mincurv'             minimum curvature optimization without iterative call
 # 'mincurv_iqp'         minimum curvature optimization with iterative call
 # 'mintime'             time-optimal trajectory optimization
-opt_type = 'mincurv'
+opt_type = args.opt_type
 
 # set mintime specific options (mintime only) --------------------------------------------------------------------------
 # tpadata:                      set individual friction map data file if desired (e.g. for varmue maps), else set None,
@@ -111,14 +130,14 @@ with open(requirements_path, 'r') as fh:
         line = fh.readline()
 
 # check dependencies
-#pkg_resources.require(dependencies)
+pkg_resources.require(dependencies)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # INITIALIZATION OF PATHS ----------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
 # assemble track import path
-file_paths["track_file"] = os.path.join(file_paths["module"], "inputs", "tracks", file_paths["track_name"] + ".csv")
+file_paths["track_file"] = os.path.join(file_paths["module"], "maps", file_paths["track_name"] + ".csv")
 
 # assemble friction map import paths
 file_paths["tpamap"] = os.path.join(file_paths["module"], "inputs", "frictionmaps",
@@ -147,8 +166,8 @@ if opt_type == 'mintime':
 
 # assemble export paths
 file_paths["mintime_export"] = os.path.join(file_paths["module"], "outputs", "mintime")
-file_paths["traj_race_export"] = os.path.join(file_paths["module"], "outputs", f"{file_paths['track_name']}_traj_race_cl.csv")
-# file_paths["traj_ltpl_export"] = os.path.join(file_paths["module"], "outputs", "traj_ltpl_cl.csv")
+file_paths["traj_race_export"] = os.path.join(file_paths["module"], "maps", file_paths["track_name"]+"_"+args.opt_type+"_"+str(args.ax_pos)+"_"+str(args.ax_neg)+"_"+str(args.ay)+"_rl.csv")
+file_paths["traj_ltpl_export"] = os.path.join(file_paths["module"], "maps", file_paths["track_name"]+"_"+args.opt_type+"_data.csv")
 file_paths["lap_time_mat_export"] = os.path.join(file_paths["module"], "outputs", lap_time_mat_opts["file"])
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -165,6 +184,10 @@ if not parser.read(os.path.join(file_paths["module"], "params", file_paths["veh_
 pars["ggv_file"] = json.loads(parser.get('GENERAL_OPTIONS', 'ggv_file'))
 pars["ax_max_machines_file"] = json.loads(parser.get('GENERAL_OPTIONS', 'ax_max_machines_file'))
 pars["stepsize_opts"] = json.loads(parser.get('GENERAL_OPTIONS', 'stepsize_opts'))
+#Overwriting stepsize opts with commandline arguments if used
+pars["stepsize_opts"]["stepsize_prep"] = args.stepsize_prep if args.stepsize_prep > 0 else pars["stepsize_opts"]["stepsize_prep"]
+pars["stepsize_opts"]["stepsize_reg"] = args.stepsize_reg if args.stepsize_reg > 0 else pars["stepsize_opts"]["stepsize_reg"]
+pars["stepsize_opts"]["stepsize_interp_after_opt"] = args.stepsize_interp_after_opt if args.stepsize_interp_after_opt > 0 else pars["stepsize_opts"]["stepsize_interp_after_opt"]
 pars["reg_smooth_opts"] = json.loads(parser.get('GENERAL_OPTIONS', 'reg_smooth_opts'))
 pars["veh_params"] = json.loads(parser.get('GENERAL_OPTIONS', 'veh_params'))
 pars["vel_calc_opts"] = json.loads(parser.get('GENERAL_OPTIONS', 'vel_calc_opts'))
@@ -178,6 +201,13 @@ elif opt_type in ['mincurv', 'mincurv_iqp']:
 elif opt_type == 'mintime':
     pars["curv_calc_opts"] = json.loads(parser.get('GENERAL_OPTIONS', 'curv_calc_opts'))
     pars["optim_opts"] = json.loads(parser.get('OPTIMIZATION_OPTIONS', 'optim_opts_mintime'))
+
+    # HACK: Overwriting racecar.ini with commandline arguments
+    pars["optim_opts"]["ax_pos_safe"] = args.ax_pos
+    pars["optim_opts"]["ax_neg_safe"] = args.ax_neg
+    pars["optim_opts"]["ay_safe"] = args.ay
+    pars["optim_opts"]["penalty_delta"] = args.penalty_delta if args.penalty_delta > 0 else pars["optim_opts"]["penalty_delta"]
+
     pars["vehicle_params_mintime"] = json.loads(parser.get('OPTIMIZATION_OPTIONS', 'vehicle_params_mintime'))
     pars["tire_params_mintime"] = json.loads(parser.get('OPTIMIZATION_OPTIONS', 'tire_params_mintime'))
     pars["pwr_params_mintime"] = json.loads(parser.get('OPTIMIZATION_OPTIONS', 'pwr_params_mintime'))
@@ -187,6 +217,9 @@ elif opt_type == 'mintime':
     pars["optim_opts"]["warm_start"] = mintime_opts["warm_start"]
     pars["vehicle_params_mintime"]["wheelbase"] = (pars["vehicle_params_mintime"]["wheelbase_front"]
                                                    + pars["vehicle_params_mintime"]["wheelbase_rear"])
+
+#overwrite width_opt if specified as optional commandline argument
+pars["optim_opts"]["width_opt"] = args.width_opt if args.width_opt > 0 else pars["optim_opts"]["width_opt"]
 
 # set import path for ggv diagram and ax_max_machines (if required)
 if not (opt_type == 'mintime' and not mintime_opts["recalc_vel_profile_by_tph"]):
@@ -244,7 +277,9 @@ reftrack_interp, normvec_normalized_interp, a_interp, coeffs_x_interp, coeffs_y_
                                                 reg_smooth_opts=pars["reg_smooth_opts"],
                                                 stepsize_opts=pars["stepsize_opts"],
                                                 debug=debug,
-                                                min_width=imp_opts["min_track_width"])
+                                                min_width=imp_opts["min_track_width"],
+                                                intersects_off=args.intersects_off,
+                                                new_track_interpolation=args.new_track_interpolation)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CALL OPTIMIZATION ----------------------------------------------------------------------------------------------------
@@ -334,7 +369,9 @@ if opt_type == 'mintime' and mintime_opts["reopt_mintime_solution"]:
                                                     reg_smooth_opts=pars["reg_smooth_opts"],
                                                     stepsize_opts=pars["stepsize_opts"],
                                                     debug=False,
-                                                    min_width=imp_opts["min_track_width"])[:3]
+                                                    min_width=imp_opts["min_track_width"],
+                                                    intersects_off=intersects_off,
+                                                    new_track_interpolation=new_track_interpolation)[:3]
 
     # set artificial track widths for reoptimization
     w_tr_tmp = 0.5 * pars["optim_opts"]["w_tr_reopt"] * np.ones(reftrack_interp.shape[0])
@@ -433,7 +470,7 @@ if plot_opts["racetraj_vel"]:
     plt.xlabel("distance in m")
     plt.legend(["vx in m/s", "ax in m/s2", "t in s"])
 
-    plt.savefig("velocity_profile.pdf")
+    plt.savefig("velocity.pdf")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # CALCULATE LAP TIMES (AT DIFFERENT SCALES AND TOP SPEEDS) -------------------------------------------------------------
@@ -544,7 +581,9 @@ if "traj_race_export" in file_paths.keys():
 
 # if requested, export trajectory including map information (via normal vectors) to CSV
 if "traj_ltpl_export" in file_paths.keys():
-    helper_funcs_glob.src.export_traj_ltpl.export_traj_ltpl(file_paths=file_paths,
+    #only export full trajectory information for mincurve optimizations
+    if (opt_type == 'mincurv' or opt_type == 'mincurv_iqp'):
+        helper_funcs_glob.src.export_traj_ltpl.export_traj_ltpl(file_paths=file_paths,
                                                             spline_lengths_opt=spline_lengths_opt,
                                                             trajectory_opt=trajectory_opt,
                                                             reftrack=reftrack_interp,
